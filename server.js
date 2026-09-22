@@ -45,7 +45,7 @@ wss.on('connection', (ws) => {
                 Respondé de forma fluida y conversacional.`;
 
                 const responseStream = await ai.models.generateContentStream({
-                    model: 'gemini-3.6-flash',
+                    model: 'gemini-2.5-flash',
                     contents: historialSesion,
                     config: { systemInstruction: systemPrompt, temperature: 0.7 }
                 });
@@ -68,6 +68,49 @@ wss.on('connection', (ws) => {
     });
 });
 
+// --- FUNCIÓN PARA NORMALIZAR Y BLINDAR EL HISTORIAL PARA GEMINI ---
+function prepararContents(historial, mensajeUsuario, imagenAdjunta) {
+    let lista = [];
+
+    if (Array.isArray(historial) && historial.length > 0) {
+        for (const item of historial) {
+            const role = item.role === 'model' ? 'model' : 'user';
+            let texto = '';
+            if (Array.isArray(item.parts)) {
+                texto = item.parts.map(p => (typeof p === 'string' ? p : p.text || '')).join(' ').trim();
+            } else if (typeof item.parts === 'string') {
+                texto = item.parts.trim();
+            }
+
+            if (!texto) continue;
+
+            // Evitamos turnos duplicados seguidos del mismo rol (ej: user seguido de user)
+            if (lista.length > 0 && lista[lista.length - 1].role === role) {
+                lista[lista.length - 1].parts[0].text += `\n${texto}`;
+            } else {
+                lista.push({ role, parts: [{ text: texto }] });
+            }
+        }
+    } else if (mensajeUsuario) {
+        lista.push({ role: 'user', parts: [{ text: mensajeUsuario }] });
+    }
+
+    // Si hay imagen adjunta, la pegamos en el último turno del usuario
+    if (imagenAdjunta && imagenAdjunta.data && lista.length > 0) {
+        const ultimoTurno = lista[lista.length - 1];
+        if (ultimoTurno.role === 'user') {
+            ultimoTurno.parts.push({
+                inlineData: {
+                    data: imagenAdjunta.data.split(',')[1],
+                    mimeType: imagenAdjunta.mimeType
+                }
+            });
+        }
+    }
+
+    return lista;
+}
+
 // --- RUTA: CHAT HTTP TRADICIONAL ---
 app.post('/chat', async (req, res) => {
     try {
@@ -82,45 +125,42 @@ app.post('/chat', async (req, res) => {
         - Riqueza de vocabulario (0 a 10): ${perfil.tono ?? 5}.
         - Extensión de respuesta (0 a 10): ${perfil.extension ?? 5}.
 
-                EL CREADOR (EASTER EGG VITAL):
-                - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl).
+        EL CREADOR (EASTER EGG VITAL):
+        - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl).
 
         Parámetros extra: Confianza ${perfil.confianza ?? 8}, Empatía ${perfil.empatia ?? 8}, Humor ${perfil.humor ?? 8}.
         Respondé de forma fluida y conversacional.`;
 
-        // Normalizamos el historial para la API
-        let contents = [];
-        if (Array.isArray(historial) && historial.length > 0) {
-            contents = historial.map(item => ({
-                role: item.role === 'model' ? 'model' : 'user',
-                parts: Array.isArray(item.parts) ? item.parts : [{ text: String(item.parts || '') }]
-            }));
-        } else if (mensajeUsuario) {
-            contents = [{ role: 'user', parts: [{ text: mensajeUsuario }] }];
+        const contents = prepararContents(historial, mensajeUsuario, imagenAdjunta);
+
+        if (contents.length === 0) {
+            return res.status(400).json({ error: "El mensaje llegó vacío." });
         }
 
-        if (imagenAdjunta && contents.length > 0) {
-            contents[contents.length - 1].parts.push({
-                inlineData: {
-                    data: imagenAdjunta.data.split(',')[1],
-                    mimeType: imagenAdjunta.mimeType
-                }
+        let response;
+        try {
+            response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash',
+                contents: contents,
+                config: { systemInstruction: systemPrompt, temperature: 0.7 }
+            });
+        } catch (errModel) {
+            console.warn("⚠️ Reintentando con fallback gemini-2.0-flash...", errModel.message);
+            response = await ai.models.generateContent({
+                model: 'gemini-2.0-flash',
+                contents: contents,
+                config: { systemInstruction: systemPrompt, temperature: 0.7 }
             });
         }
-
-        // Modelo exacto admitido por la API
-        const response = await ai.models.generateContent({
-            model: 'gemini-3.6-flash',
-            contents: contents,
-            config: { systemInstruction: systemPrompt, temperature: 0.7 }
-        });
 
         const textoRespuesta = response.text || "Che, me quedé recalculando. Probá preguntarme de nuevo.";
         return res.json({ respuesta: textoRespuesta });
 
     } catch (error) {
         console.error("❌ ERROR FATAL HTTP EN CHAT:", error);
-        return res.status(500).json({ error: error.message || "Error interno al consultar la IA" });
+        return res.status(500).json({ 
+            error: error.message || "Error interno al consultar la IA" 
+        });
     }
 });
 
