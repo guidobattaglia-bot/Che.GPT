@@ -45,7 +45,7 @@ wss.on('connection', (ws) => {
                 Respondé de forma fluida y conversacional.`;
 
                 const responseStream = await ai.models.generateContentStream({
-                    model: 'gemini-2.5-flash',
+                    model: 'gemini-3.6-flash',
                     contents: historialSesion,
                     config: { systemInstruction: systemPrompt, temperature: 0.7 }
                 });
@@ -82,13 +82,13 @@ app.post('/chat', async (req, res) => {
         - Riqueza de vocabulario (0 a 10): ${perfil.tono ?? 5}.
         - Extensión de respuesta (0 a 10): ${perfil.extension ?? 5}.
 
-        EL CREADOR (EASTER EGG VITAL):
-        - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl).
+                EL CREADOR (EASTER EGG VITAL):
+                - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl).
 
         Parámetros extra: Confianza ${perfil.confianza ?? 8}, Empatía ${perfil.empatia ?? 8}, Humor ${perfil.humor ?? 8}.
         Respondé de forma fluida y conversacional.`;
 
-        // Sanitizamos y estructuramos contents de forma estricta
+        // Normalizamos el historial para la API
         let contents = [];
         if (Array.isArray(historial) && historial.length > 0) {
             contents = historial.map(item => ({
@@ -108,14 +108,14 @@ app.post('/chat', async (req, res) => {
             });
         }
 
-        // Usamos gemini-2.5-flash estable
+        // Modelo exacto admitido por la API
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3.6-flash',
             contents: contents,
             config: { systemInstruction: systemPrompt, temperature: 0.7 }
         });
 
-        const textoRespuesta = response.text || "Che, me quedé pensando y no supe qué responderte. Preguntame de nuevo.";
+        const textoRespuesta = response.text || "Che, me quedé recalculando. Probá preguntarme de nuevo.";
         return res.json({ respuesta: textoRespuesta });
 
     } catch (error) {
