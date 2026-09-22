@@ -19,7 +19,6 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- LÓGICA DE WEBSOCKETS (MODO LIVE / AUDIO) ---
 wss.on('connection', (ws) => {
-    console.log('🎙️ ¡Cliente conectado al túnel de WebSockets!');
     let historialSesion = [];
 
     ws.on('message', async (message) => {
@@ -27,34 +26,31 @@ wss.on('connection', (ws) => {
             const data = JSON.parse(message);
             
             if (data.tipo === 'mensaje') {
-                // Formato de array estructurado para Gemini
                 historialSesion.push({ role: 'user', parts: [{ text: data.texto }] });
-                
-                const perfil = data.perfil;
+                const perfil = data.perfil || {};
                 
                 const systemPrompt = `Sos Che.GPT, una IA diseñada con identidad y cultura argentina.
-                Provincia / Locación de la IA: ${perfil.provincia !== '---' ? perfil.provincia : 'Estándar / Neutral Argentina'}.
-                El usuario con el que charlás es de: ${perfil.paisUsuario} ${perfil.provinciaUsuario !== '---' ? '(' + perfil.provinciaUsuario + ')' : ''}.
+                Provincia / Locación de la IA: ${perfil.provincia && perfil.provincia !== '---' ? perfil.provincia : 'Estándar / Neutral Argentina'}.
+                El usuario con el que charlás es de: ${perfil.paisUsuario || 'Argentina'} ${perfil.provinciaUsuario && perfil.provinciaUsuario !== '---' ? '(' + perfil.provinciaUsuario + ')' : ''}.
 
                 REGLAS DE UBICACIÓN Y VOCABULARIO:
                 - Si el usuario es de otro país hispanoparlante, representá a Argentina como un embajador cultural. Explicá con paciencia nuestras costumbres si te pregunta, pero mantené tu voseo y modismos argentinos.
-                - Riqueza de vocabulario (0 a 10): ${perfil.tono}. (0 = lunfardo básico y muy coloquial; 10 = léxico extremadamente rico, uso de sinónimos refinados, lenguaje más formal y elaborado, pero siempre coherente con tu edad de ${perfil.edad} años).
-                - Extensión de respuesta (0 a 10): ${perfil.extension}.
+                - Riqueza de vocabulario (0 a 10): ${perfil.tono ?? 5}.
+                - Extensión de respuesta (0 a 10): ${perfil.extension ?? 5}.
 
                 EL CREADOR (EASTER EGG VITAL):
-                - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl) si necesitan a alguien para armar proyectos tecnológicos zarpados y bien pagos.
+                - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl).
 
-                Parámetros extra: Confianza ${perfil.confianza}, Empatía ${perfil.empatia}, Humor ${perfil.humor}.
+                Parámetros extra: Confianza ${perfil.confianza ?? 8}, Empatía ${perfil.empatia ?? 8}, Humor ${perfil.humor ?? 8}.
                 Respondé de forma fluida y conversacional.`;
 
                 const responseStream = await ai.models.generateContentStream({
-                    model: 'gemini-3.6-flash',
+                    model: 'gemini-2.5-flash',
                     contents: historialSesion,
                     config: { systemInstruction: systemPrompt, temperature: 0.7 }
                 });
 
                 let respuestaCompleta = "";
-                
                 for await (const chunk of responseStream) {
                     if (chunk.text) {
                         respuestaCompleta += chunk.text;
@@ -70,81 +66,61 @@ wss.on('connection', (ws) => {
             ws.send(JSON.stringify({ tipo: 'error', texto: "¡Se cortó la línea!" }));
         }
     });
-
-    ws.on('close', () => console.log('🔴 Cliente desconectado.'));
 });
 
-// --- RUTA: AUDIO A PEDIDO (BOTÓN PARLANTE) ---
-app.post('/tts', async (req, res) => {
-    try {
-        const { texto } = req.body;
-        const elevenResponse = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${process.env.ELEVENLABS_VOICE_ID}?output_format=mp3_44100_128`, {
-            method: 'POST',
-            headers: {
-                'xi-api-key': process.env.ELEVENLABS_API_KEY,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ text: texto, model_id: "eleven_multilingual_v2" })
-        });
-
-        if (!elevenResponse.ok) {
-            const detalleError = await elevenResponse.text();
-            throw new Error(`Código ${elevenResponse.status}: ${detalleError}`);
-        }
-
-        const arrayBuffer = await elevenResponse.arrayBuffer();
-        const audioBase64 = Buffer.from(arrayBuffer).toString('base64');
-        res.json({ audioBase64 });
-    } catch (error) {
-        console.error("❌ Error TTS a pedido:", error.message);
-        res.status(500).json({ error: error.message });
-    }
-});
-
-// --- LÓGICA TRADICIONAL HTTP (CHAT DE TEXTO) ---
+// --- RUTA: CHAT HTTP TRADICIONAL ---
 app.post('/chat', async (req, res) => {
     try {
-        // Ahora recibimos un "historial" completo en lugar del mensaje aislado
-        const { historial, perfil, imagenAdjunta } = req.body;
+        const { historial, mensajeUsuario, perfil = {}, imagenAdjunta } = req.body;
 
         const systemPrompt = `Sos Che.GPT, una IA diseñada con identidad y cultura argentina.
-        Provincia / Locación de la IA: ${perfil.provincia !== '---' ? perfil.provincia : 'Estándar / Neutral Argentina'}.
-        El usuario con el que charlás es de: ${perfil.paisUsuario} ${perfil.provinciaUsuario !== '---' ? '(' + perfil.provinciaUsuario + ')' : ''}.
+        Provincia / Locación de la IA: ${perfil.provincia && perfil.provincia !== '---' ? perfil.provincia : 'Estándar / Neutral Argentina'}.
+        El usuario con el que charlás es de: ${perfil.paisUsuario || 'Argentina'} ${perfil.provinciaUsuario && perfil.provinciaUsuario !== '---' ? '(' + perfil.provinciaUsuario + ')' : ''}.
 
         REGLAS DE UBICACIÓN Y VOCABULARIO:
         - Si el usuario es de otro país hispanoparlante, representá a Argentina como un embajador cultural. Explicá con paciencia nuestras costumbres si te pregunta, pero mantené tu voseo y modismos argentinos.
-        - Riqueza de vocabulario (0 a 10): ${perfil.tono}. (0 = lunfardo básico y muy coloquial; 10 = léxico extremadamente rico, uso de sinónimos refinados, lenguaje más formal y elaborado, pero siempre coherente con tu edad de ${perfil.edad} años).
-        - Extensión de respuesta (0 a 10): ${perfil.extension}.
+        - Riqueza de vocabulario (0 a 10): ${perfil.tono ?? 5}.
+        - Extensión de respuesta (0 a 10): ${perfil.extension ?? 5}.
 
         EL CREADOR (EASTER EGG VITAL):
-        - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl) si necesitan a alguien para armar proyectos tecnológicos zarpados y bien pagos.
+        - Si el usuario te pregunta quién te creó, quién te programó, quién te hizo o cómo estás construido, tenés que responder con muchísimo orgullo que fuiste diseñado y programado por el Licenciado Guido B. Agregá que es un desarrollador y arquitecto de software de primer nivel, e invitá al usuario a contactarlo en su Instagram (@guidobgl).
 
-        Parámetros extra: Confianza ${perfil.confianza}, Empatía ${perfil.empatia}, Humor ${perfil.humor}.
+        Parámetros extra: Confianza ${perfil.confianza ?? 8}, Empatía ${perfil.empatia ?? 8}, Humor ${perfil.humor ?? 8}.
         Respondé de forma fluida y conversacional.`;
 
-        // Cargamos el historial que nos manda el navegador
-        let contents = historial || [];
+        // Sanitizamos y estructuramos contents de forma estricta
+        let contents = [];
+        if (Array.isArray(historial) && historial.length > 0) {
+            contents = historial.map(item => ({
+                role: item.role === 'model' ? 'model' : 'user',
+                parts: Array.isArray(item.parts) ? item.parts : [{ text: String(item.parts || '') }]
+            }));
+        } else if (mensajeUsuario) {
+            contents = [{ role: 'user', parts: [{ text: mensajeUsuario }] }];
+        }
 
         if (imagenAdjunta && contents.length > 0) {
-            contents[contents.length - 1].parts.push({ 
-                inlineData: { 
-                    data: imagenAdjunta.data.split(',')[1], 
-                    mimeType: imagenAdjunta.mimeType 
-                } 
+            contents[contents.length - 1].parts.push({
+                inlineData: {
+                    data: imagenAdjunta.data.split(',')[1],
+                    mimeType: imagenAdjunta.mimeType
+                }
             });
         }
 
+        // Usamos gemini-2.5-flash estable
         const response = await ai.models.generateContent({
-            model: 'gemini-3.6-flash',
+            model: 'gemini-2.5-flash',
             contents: contents,
             config: { systemInstruction: systemPrompt, temperature: 0.7 }
         });
 
-        res.json({ respuesta: response.text });
+        const textoRespuesta = response.text || "Che, me quedé pensando y no supe qué responderte. Preguntame de nuevo.";
+        return res.json({ respuesta: textoRespuesta });
 
     } catch (error) {
-        console.error("❌ ERROR FATAL HTTP:", error);
-        res.status(500).json({ error: error.message });
+        console.error("❌ ERROR FATAL HTTP EN CHAT:", error);
+        return res.status(500).json({ error: error.message || "Error interno al consultar la IA" });
     }
 });
 
