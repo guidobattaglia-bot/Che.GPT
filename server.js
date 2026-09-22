@@ -15,9 +15,10 @@ app.use(express.static('./'));
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
+// Inicializamos el cliente oficial de Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// --- LÓGICA DE WEBSOCKETS ---
+// --- LÓGICA DE WEBSOCKETS (MODO LIVE / AUDIO) ---
 wss.on('connection', (ws) => {
     console.log('🎙️ ¡Cliente conectado al túnel de WebSockets!');
     let historialSesion = [];
@@ -100,35 +101,10 @@ app.post('/tts', async (req, res) => {
     }
 });
 
-// --- LÓGICA TRADICIONAL HTTP (CHAT DE TEXTO E IMÁGENES) ---
+// --- LÓGICA TRADICIONAL HTTP (CHAT DE TEXTO E INPUT DE IMÁGENES) ---
 app.post('/chat', async (req, res) => {
     try {
         const { mensajeUsuario, perfil, imagenAdjunta } = req.body;
-
-        const esPedidoDeImagen = /dibuj|imagen|generame|generar|crea|foto/i.test(mensajeUsuario);
-
-        if (esPedidoDeImagen) {
-            try {
-                let promptEnIngles = mensajeUsuario; 
-                try {
-                    const promptTraductor = `Extrae la idea visual de: "${mensajeUsuario}". Escribe un prompt en inglés para Stable Diffusion. Solo el prompt.`;
-                    const resultOptimizacion = await ai.models.generateContent({ model: 'gemini-3.6-flash', contents: [promptTraductor] });
-                    promptEnIngles = resultOptimizacion.text.trim();
-                } catch (e) {}
-
-                const hfResponse = await fetch("https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0", {
-                    headers: { Authorization: `Bearer ${process.env.HF_API_KEY}`, "Content-Type": "application/json" },
-                    method: "POST", body: JSON.stringify({ inputs: promptEnIngles })
-                });
-
-                if (!hfResponse.ok) throw new Error(hfResponse.statusText);
-                const arrayBuffer = await hfResponse.arrayBuffer();
-                const imageUrl = `data:image/jpeg;base64,${Buffer.from(arrayBuffer).toString('base64')}`;
-                return res.json({ respuesta: `¡Acá tenés la placa, compa!`, imagenGenerada: imageUrl });
-            } catch (errImg) {
-                return res.json({ respuesta: `¡Uy! Falló el motor de imágenes.` });
-            }
-        }
 
         const systemPrompt = `Sos Che.GPT, una IA diseñada con identidad y cultura argentina.
         Provincia / Locación de la IA: ${perfil.provincia !== '---' ? perfil.provincia : 'Estándar / Neutral Argentina'}.
@@ -145,8 +121,16 @@ app.post('/chat', async (req, res) => {
         Parámetros extra: Confianza ${perfil.confianza}, Empatía ${perfil.empatia}, Humor ${perfil.humor}.
         Respondé de forma fluida y conversacional.`;
 
+        // Preparamos el array de contenidos. Si el usuario subió una foto, se la pasamos a Gemini para que la analice.
         let contents = [mensajeUsuario];
-        if (imagenAdjunta) contents.push({ inlineData: { data: imagenAdjunta.data.split(',')[1], mimeType: imagenAdjunta.mimeType } });
+        if (imagenAdjunta) {
+            contents.push({ 
+                inlineData: { 
+                    data: imagenAdjunta.data.split(',')[1], 
+                    mimeType: imagenAdjunta.mimeType 
+                } 
+            });
+        }
 
         const response = await ai.models.generateContent({
             model: 'gemini-3.6-flash',
@@ -164,5 +148,5 @@ app.post('/chat', async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-    console.log(`¡El servidor de Che.GPT corre en http://localhost:${PORT}!`);
+    console.log(`¡El servidor de Che.GPT corre en el puerto ${PORT}!`);
 });
