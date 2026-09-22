@@ -15,7 +15,6 @@ app.use(express.static('./'));
 const server = createServer(app);
 const wss = new WebSocketServer({ server });
 
-// Inicializamos el cliente oficial de Gemini
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 // --- LÓGICA DE WEBSOCKETS (MODO LIVE / AUDIO) ---
@@ -28,7 +27,8 @@ wss.on('connection', (ws) => {
             const data = JSON.parse(message);
             
             if (data.tipo === 'mensaje') {
-                historialSesion.push(data.texto);
+                // Formato de array estructurado para Gemini
+                historialSesion.push({ role: 'user', parts: [{ text: data.texto }] });
                 
                 const perfil = data.perfil;
                 
@@ -62,7 +62,7 @@ wss.on('connection', (ws) => {
                     }
                 }
                 
-                historialSesion.push(respuestaCompleta);
+                historialSesion.push({ role: 'model', parts: [{ text: respuestaCompleta }] });
                 ws.send(JSON.stringify({ tipo: 'fin' })); 
             }
         } catch (error) {
@@ -101,10 +101,11 @@ app.post('/tts', async (req, res) => {
     }
 });
 
-// --- LÓGICA TRADICIONAL HTTP (CHAT DE TEXTO E INPUT DE IMÁGENES) ---
+// --- LÓGICA TRADICIONAL HTTP (CHAT DE TEXTO) ---
 app.post('/chat', async (req, res) => {
     try {
-        const { mensajeUsuario, perfil, imagenAdjunta } = req.body;
+        // Ahora recibimos un "historial" completo en lugar del mensaje aislado
+        const { historial, perfil, imagenAdjunta } = req.body;
 
         const systemPrompt = `Sos Che.GPT, una IA diseñada con identidad y cultura argentina.
         Provincia / Locación de la IA: ${perfil.provincia !== '---' ? perfil.provincia : 'Estándar / Neutral Argentina'}.
@@ -121,10 +122,11 @@ app.post('/chat', async (req, res) => {
         Parámetros extra: Confianza ${perfil.confianza}, Empatía ${perfil.empatia}, Humor ${perfil.humor}.
         Respondé de forma fluida y conversacional.`;
 
-        // Preparamos el array de contenidos. Si el usuario subió una foto, se la pasamos a Gemini para que la analice.
-        let contents = [mensajeUsuario];
-        if (imagenAdjunta) {
-            contents.push({ 
+        // Cargamos el historial que nos manda el navegador
+        let contents = historial || [];
+
+        if (imagenAdjunta && contents.length > 0) {
+            contents[contents.length - 1].parts.push({ 
                 inlineData: { 
                     data: imagenAdjunta.data.split(',')[1], 
                     mimeType: imagenAdjunta.mimeType 
