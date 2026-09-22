@@ -17,6 +17,15 @@ const wss = new WebSocketServer({ server });
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+// Lista en cascada de modelos disponibles para recorrer
+const MODELOS_CASCADA = [
+    'gemini-3.6-flash',
+    'gemini-3.5-flash',
+    'gemini-3-flash-preview',
+    'gemini-2.5-flash',
+    'gemini-flash-latest'
+];
+
 // --- LÓGICA DE WEBSOCKETS (MODO LIVE / AUDIO) ---
 wss.on('connection', (ws) => {
     let historialSesion = [];
@@ -44,14 +53,27 @@ wss.on('connection', (ws) => {
                 Parámetros extra: Confianza ${perfil.confianza ?? 8}, Empatía ${perfil.empatia ?? 8}, Humor ${perfil.humor ?? 8}.
                 Respondé de forma fluida y conversacional.`;
 
-                const responseStream = await ai.models.generateContentStream({
-                    model: 'gemini-2.5-flash',
-                    contents: historialSesion,
-                    config: { systemInstruction: systemPrompt, temperature: 0.7 }
-                });
+                // Bucle de cascada para WebSockets
+                let streamExitoso = null;
+                for (const modelo of MODELOS_CASCADA) {
+                    try {
+                        streamExitoso = await ai.models.generateContentStream({
+                            model: modelo,
+                            contents: historialSesion,
+                            config: { systemInstruction: systemPrompt, temperature: 0.7 }
+                        });
+                        if (streamExitoso) break;
+                    } catch (errStream) {
+                        console.warn(`⚠️ WS Falló modelo ${modelo}, pasando al siguiente...`);
+                    }
+                }
+
+                if (!streamExitoso) {
+                    throw new Error("Ningún modelo de la cascada respondió en WS.");
+                }
 
                 let respuestaCompleta = "";
-                for await (const chunk of responseStream) {
+                for await (const chunk of streamExitoso) {
                     if (chunk.text) {
                         respuestaCompleta += chunk.text;
                         ws.send(JSON.stringify({ tipo: 'chunk', texto: chunk.text }));
@@ -68,14 +90,15 @@ wss.on('connection', (ws) => {
     });
 });
 
-// --- FUNCIÓN PARA NORMALIZAR Y BLINDAR EL HISTORIAL PARA GEMINI ---
-function prepararContents(historial, mensajeUsuario, imagenAdjunta) {
-    let lista = [];
+// --- NORMALIZACIÓN DEL HISTORIAL PARA EVITAR ERRORES DE TURNOS (400) ---
+function normalizarHistorial(historial, mensajeUsuario, imagenAdjunta) {
+    let turnos = [];
 
     if (Array.isArray(historial) && historial.length > 0) {
         for (const item of historial) {
             const role = item.role === 'model' ? 'model' : 'user';
             let texto = '';
+            
             if (Array.isArray(item.parts)) {
                 texto = item.parts.map(p => (typeof p === 'string' ? p : p.text || '')).join(' ').trim();
             } else if (typeof item.parts === 'string') {
@@ -84,22 +107,21 @@ function prepararContents(historial, mensajeUsuario, imagenAdjunta) {
 
             if (!texto) continue;
 
-            // Evitamos turnos duplicados seguidos del mismo rol (ej: user seguido de user)
-            if (lista.length > 0 && lista[lista.length - 1].role === role) {
-                lista[lista.length - 1].parts[0].text += `\n${texto}`;
+            // Fusión de turnos repetidos consecutivos para que Gemini nunca tire 400
+            if (turnos.length > 0 && turnos[turnos.length - 1].role === role) {
+                turnos[turnos.length - 1].parts[0].text += `\n${texto}`;
             } else {
-                lista.push({ role, parts: [{ text: texto }] });
+                turnos.push({ role, parts: [{ text: texto }] });
             }
         }
     } else if (mensajeUsuario) {
-        lista.push({ role: 'user', parts: [{ text: mensajeUsuario }] });
+        turnos.push({ role: 'user', parts: [{ text: mensajeUsuario }] });
     }
 
-    // Si hay imagen adjunta, la pegamos en el último turno del usuario
-    if (imagenAdjunta && imagenAdjunta.data && lista.length > 0) {
-        const ultimoTurno = lista[lista.length - 1];
-        if (ultimoTurno.role === 'user') {
-            ultimoTurno.parts.push({
+    if (imagenAdjunta && imagenAdjunta.data && turnos.length > 0) {
+        const ultimo = turnos[turnos.length - 1];
+        if (ultimo.role === 'user') {
+            ultimo.parts.push({
                 inlineData: {
                     data: imagenAdjunta.data.split(',')[1],
                     mimeType: imagenAdjunta.mimeType
@@ -108,10 +130,10 @@ function prepararContents(historial, mensajeUsuario, imagenAdjunta) {
         }
     }
 
-    return lista;
+    return turnos;
 }
 
-// --- RUTA: CHAT HTTP TRADICIONAL ---
+// --- RUTA: CHAT HTTP TRADICIONAL CON CASCADA ---
 app.post('/chat', async (req, res) => {
     try {
         const { historial, mensajeUsuario, perfil = {}, imagenAdjunta } = req.body;
@@ -131,35 +153,49 @@ app.post('/chat', async (req, res) => {
         Parámetros extra: Confianza ${perfil.confianza ?? 8}, Empatía ${perfil.empatia ?? 8}, Humor ${perfil.humor ?? 8}.
         Respondé de forma fluida y conversacional.`;
 
-        const contents = prepararContents(historial, mensajeUsuario, imagenAdjunta);
+        const contents = normalizarHistorial(historial, mensajeUsuario, imagenAdjunta);
 
         if (contents.length === 0) {
             return res.status(400).json({ error: "El mensaje llegó vacío." });
         }
 
-        let response;
-        try {
-            response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: contents,
-                config: { systemInstruction: systemPrompt, temperature: 0.7 }
-            });
-        } catch (errModel) {
-            console.warn("⚠️ Reintentando con fallback gemini-2.0-flash...", errModel.message);
-            response = await ai.models.generateContent({
-                model: 'gemini-2.0-flash',
-                contents: contents,
-                config: { systemInstruction: systemPrompt, temperature: 0.7 }
-            });
+        let respuestaFinal = null;
+        let erroresAcumulados = [];
+
+        // RECORRIDO EN CASCADA
+        for (const modelo of MODELOS_CASCADA) {
+            try {
+                console.log(`🤖 Intentando con modelo: ${modelo}...`);
+                const response = await ai.models.generateContent({
+                    model: modelo,
+                    contents: contents,
+                    config: { systemInstruction: systemPrompt, temperature: 0.7 }
+                });
+
+                if (response && response.text) {
+                    respuestaFinal = response.text;
+                    console.log(`✅ ¡Éxito con ${modelo}!`);
+                    break; // Cortamos el bucle porque ya respondió
+                }
+            } catch (err) {
+                console.warn(`⚠️ Modelo ${modelo} falló: ${err.message}`);
+                erroresAcumulados.push(`${modelo}: ${err.message}`);
+            }
         }
 
-        const textoRespuesta = response.text || "Che, me quedé recalculando. Probá preguntarme de nuevo.";
-        return res.json({ respuesta: textoRespuesta });
+        if (respuestaFinal) {
+            return res.json({ respuesta: respuestaFinal });
+        } else {
+            console.error("❌ Todos los modelos de la cascada fallaron:", erroresAcumulados);
+            return res.status(500).json({ 
+                error: `Agoté todas las opciones de motor. Detalle: ${erroresAcumulados[0] || 'Error desconocido'}` 
+            });
+        }
 
     } catch (error) {
         console.error("❌ ERROR FATAL HTTP EN CHAT:", error);
         return res.status(500).json({ 
-            error: error.message || "Error interno al consultar la IA" 
+            error: error.message || "Error interno general en el servidor." 
         });
     }
 });
