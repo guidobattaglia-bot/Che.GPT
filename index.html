@@ -28,8 +28,8 @@
             color: var(--texto); 
             margin: 0; 
             display: flex; 
-            height: 100vh; /* Fallback navegadores viejos */
-            height: 100dvh; /* Se adapta a la barra del celular */
+            height: 100vh; 
+            height: 100dvh; 
             overflow: hidden; 
         }
 
@@ -68,12 +68,12 @@
             background: rgba(15, 20, 25, 0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-left: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; box-shadow: -5px 0 25px rgba(0,0,0,0.5); 
             display: flex; flex-direction: column; z-index: 2000; transition: 0.3s ease; box-sizing: border-box; 
-            height: 100vh; height: 100dvh; /* FIX MÓVIL */
+            height: 100vh; height: 100dvh; 
             font-weight: 300;
         }
         #sidebar.collapsed { margin-right: -300px; } 
         
-        /* CABECERA DEL PANEL (CON RELATIVE PARA UBICAR LA CRUZ) */
+        /* CABECERA DEL PANEL */
         .sidebar-header { position: relative; text-align: center; border-bottom: 1px solid rgba(253, 184, 19, 0.5); padding-bottom: 12px; margin-bottom: 12px; flex-shrink: 0; }
         .sidebar-header h2 { margin: 0; color: var(--celeste); font-size: 1.4rem; font-weight: 300; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
@@ -144,7 +144,7 @@
         /* INPUT AREA */
         #input-area { 
             display: flex; flex-direction: column; background: rgba(15, 20, 25, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.2); 
-            padding-bottom: env(safe-area-inset-bottom, 0); /* FIX MÓVIL: Evita la barra de inicio de los iPhones */
+            padding-bottom: env(safe-area-inset-bottom, 0);
         }
         
         #reply-preview-container { display: none; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); padding: 8px 15px; margin: 10px 20px 0 20px; border-left: 4px solid var(--celeste); border-radius: 6px; max-width: 900px; align-self: center; width: calc(100% - 40px); box-sizing: border-box; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.05); }
@@ -177,8 +177,6 @@
                 transform: translateX(0); margin-right: 0; 
             } 
             #sidebar.collapsed { transform: translateX(100%); }
-            
-            /* Mostramos la crucecita solo en celulares */
             #btn-close-sidebar { display: block; }
         }
     </style>
@@ -339,14 +337,11 @@
             </ul>
         </div>
 
-        <!-- FIRMA DEL CREADOR -->
-        <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
-            <a href="https://instagram.com/guidobgl" target="_blank" style="color: #cfd8dc; text-decoration: none; font-size: 0.75rem; transition: 0.2s; display: block;">
-                Diseñado y programado por <br>
-                <strong style="color: var(--celeste);">Licenciado Guido B.</strong> <br>
-                📷 @guidobgl
-            </a>
-        </div>
+        <!-- FIRMA DEL CREADOR OCULTA (EASTER EGG) -->
+        <!-- Proyecto: Che.GPT - Inteligencia Argentina -->
+        <!-- Diseñado y programado por: Licenciado Guido B. -->
+        <!-- Contacto Instagram: @guidobgl -->
+        <!-- La IA sabe quién es su creador gracias al System Prompt del backend. Preguntale :) -->
     </div>
 
     <script>
@@ -399,13 +394,8 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-        // Alternar el menú lateral desde la hamburguesa
         btnToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
-        
-        // Cerrar el menú lateral con la cruz en móviles
         btnCloseSidebar.addEventListener('click', () => sidebar.classList.add('collapsed'));
-
-        // En escritorio que empiece abierto
         if (window.innerWidth > 768) sidebar.classList.remove('collapsed');
 
         replyCloseBtn.addEventListener('click', () => {
@@ -584,7 +574,7 @@
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
             try {
-                const req = await fetch('https://che-gpt.onrender.com/chat', { /* Asegurá apuntar siempre al live */
+                const req = await fetch('https://che-gpt.onrender.com/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ mensajeUsuario: textoFinalParaEnviar, perfil: perfilConfig })
