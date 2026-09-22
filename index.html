@@ -186,9 +186,7 @@
             </button>
         </div>
         <div id="chat-history">
-            <div id="chat-messages-wrapper">
-                <!-- Se llenará automáticamente por JS con el saludo inicial o el historial -->
-            </div>
+            <div id="chat-messages-wrapper"></div>
         </div>
         <div id="input-area">
             <div id="reply-preview-container">
@@ -266,7 +264,6 @@
         const replyCloseBtn = document.getElementById('reply-preview-close');
         let mensajeCitadoActual = null;
 
-        // --- MANEJO DE MEMORIA LOCAL (HISTORIAL) Y SALUDO INICIAL ---
         const saludoInicialHTML = `
             ¡Hola! Soy <b>Che.GPT</b>, tu asistente de Inteligencia Artificial.<br><br>
             Desde el menú de <b>Preferencias</b> (arriba a la derecha) podés configurar mi forma de ser a tu gusto:<br>
@@ -289,8 +286,6 @@
                 historialChat.forEach(msg => {
                     const tipo = msg.role === 'user' ? 'mensaje-usuario' : 'mensaje-ia';
                     let textoParaMostrar = msg.parts[0].text;
-                    
-                    // Si el mensaje del usuario tiene una cita, la reconstruimos visualmente
                     if (textoParaMostrar.startsWith('[En respuesta a:')) {
                         textoParaMostrar = textoParaMostrar.replace(/\[En respuesta a: "(.*?)"\]\n/, '<div style="font-size: 0.85rem; border-left: 2px solid rgba(255,255,255,0.4); padding-left: 8px; margin-bottom: 5px; opacity: 0.9; background: rgba(0,0,0,0.15); border-radius: 4px; padding: 4px; text-shadow: none;">Citado: "$1"</div>');
                     }
@@ -298,12 +293,8 @@
                 });
             }
         }
-        
-        // Llamamos a la función apenas carga la página
         renderizarPantallaInicial();
 
-
-        // --- MANEJO DE PREFERENCIAS ---
         if (localStorage.getItem('pais_usuario')) selectPaisUsuario.value = localStorage.getItem('pais_usuario');
         if (localStorage.getItem('provincia_usuario')) selectProvinciaUsuario.value = localStorage.getItem('provincia_usuario');
         if (localStorage.getItem('provincia_ia')) selectProvinciaIA.value = localStorage.getItem('provincia_ia');
@@ -349,7 +340,6 @@
             const edadVal = Math.floor(Math.random() * (80 - 18 + 1)) + 18; document.getElementById('edad').value = edadVal; document.getElementById('val-edad').innerText = edadVal;
         });
 
-        // BOTÓN + NUEVO: Limpia la memoria local y reinicia la charla
         btnNuevoChat.addEventListener('click', () => {
             historialChat = [];
             localStorage.removeItem('chegpt_historial');
@@ -358,7 +348,6 @@
             mensajeCitadoActual = null;
         });
 
-        // --- SISTEMA DE VOZ ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let reconocimiento = null;
         let dictando = false;
@@ -387,14 +376,13 @@
             spanTexto.innerHTML = texto.replace(/\n/g, '<br>');
             div.appendChild(spanTexto);
 
-            if (tipo === 'mensaje-ia' && texto !== "Escribiendo... ⏳") {
+            if (tipo === 'mensaje-ia' && !texto.includes("Procesando chamuyo")) {
                 const accionesDiv = document.createElement('div');
                 accionesDiv.classList.add('mensaje-acciones');
                 
                 const btnCopiar = document.createElement('button');
                 btnCopiar.className = 'btn-accion-msj'; btnCopiar.title = 'Copiar mensaje'; btnCopiar.innerHTML = '📋';
                 btnCopiar.onclick = () => { 
-                    // Limpiamos los saltos de línea HTML si vamos a copiar
                     const textoPuro = texto.replace(/<br>/g, '\n').replace(/<[^>]*>?/gm, '');
                     navigator.clipboard.writeText(textoPuro); 
                     btnCopiar.innerHTML = '✔️'; 
@@ -415,7 +403,6 @@
                 accionesDiv.appendChild(btnCopiar); accionesDiv.appendChild(btnResponder); div.appendChild(accionesDiv);
             }
 
-            // Si es el primer mensaje de usuario y estaba el saludo, limpiamos la caja
             if (!esRestauracion && tipo === 'mensaje-usuario' && chatMessagesWrapper.innerHTML.includes(saludoInicialHTML)) {
                 chatMessagesWrapper.innerHTML = '';
             }
@@ -438,7 +425,6 @@
 
             agregarMensajeDirecto(htmlParaMostrarUsuario, 'mensaje-usuario');
             
-            // GUARDAMOS EL MENSAJE EN EL HISTORIAL Y EN LOCALSTORAGE
             historialChat.push({ role: 'user', parts: [{ text: textoFinalParaEnviar }] });
             localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
             
@@ -451,8 +437,16 @@
                 edad: parseInt(document.getElementById('edad').value), extension: parseInt(document.getElementById('extension').value)
             };
 
-            const divLoading = document.createElement('div'); divLoading.id = 'cartel-escribiendo'; divLoading.classList.add('mensaje', 'mensaje-ia');
-            divLoading.innerHTML = `<span>Escribiendo... ⏳</span>`; chatMessagesWrapper.appendChild(divLoading); chatHistory.scrollTop = chatHistory.scrollHeight;
+            const cartelViejo = document.getElementById('cartel-escribiendo');
+            if (cartelViejo) cartelViejo.remove();
+
+            // NUEVO CARTEL: "Procesando chamuyo... 🧉"
+            const divLoading = document.createElement('div'); 
+            divLoading.id = 'cartel-escribiendo'; 
+            divLoading.classList.add('mensaje', 'mensaje-ia');
+            divLoading.innerHTML = `<span>Procesando chamuyo... 🧉</span>`; 
+            chatMessagesWrapper.appendChild(divLoading); 
+            chatHistory.scrollTop = chatHistory.scrollHeight;
 
             try {
                 const req = await fetch('https://che-gpt.onrender.com/chat', {
@@ -460,23 +454,30 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ historial: historialChat, perfil: perfilConfig })
                 });
+
+                if (!req.ok) {
+                    throw new Error(`Error en el servidor: ${req.status}`);
+                }
+
                 const res = await req.json();
                 
-                const cartelParaBorrar = document.getElementById('cartel-escribiendo'); if (cartelParaBorrar) cartelParaBorrar.remove();
+                const cartelParaBorrar = document.getElementById('cartel-escribiendo'); 
+                if (cartelParaBorrar) cartelParaBorrar.remove();
                 
-                if (res.respuesta) {
-                    // GUARDAMOS LA RESPUESTA DE LA IA
+                if (res && res.respuesta && res.respuesta.trim() !== "") {
                     historialChat.push({ role: 'model', parts: [{ text: res.respuesta }] });
                     localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
-                    
                     agregarMensajeDirecto(res.respuesta, 'mensaje-ia');
+                } else {
+                    throw new Error("Respuesta vacía recibida");
                 }
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             } catch (e) {
-                const cartelParaBorrar = document.getElementById('cartel-escribiendo'); if (cartelParaBorrar) cartelParaBorrar.remove();
-                agregarMensajeDirecto("Error del servidor.", 'mensaje-error');
+                const cartelParaBorrar = document.getElementById('cartel-escribiendo'); 
+                if (cartelParaBorrar) cartelParaBorrar.remove();
                 
-                // Si hubo error, revertimos el último mensaje del historial para no trabar a la IA
+                agregarMensajeDirecto("Se me trabó la neurona con esa consulta. Tirame de nuevo o fijate si se cortó la señal.", 'mensaje-error');
+                
                 historialChat.pop();
                 localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
             }
