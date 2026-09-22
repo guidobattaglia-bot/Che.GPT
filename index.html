@@ -24,7 +24,6 @@
             --texto: #E0E0E0;
         }
         
-        /* FONDO GLOBAL Y AJUSTE DE PANTALLA DINÁMICO (FIX MÓVIL) */
         body { 
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--fondo); 
@@ -41,26 +40,17 @@
             overflow: hidden; 
         }
 
-        /* CHAT A LA IZQUIERDA, CRECE PARA OCUPAR ESPACIO */
         #main-chat { flex-grow: 1; display: flex; flex-direction: column; position: relative; overflow: hidden; background: transparent; }
         
-        /* CABECERA: LOGO IZQUIERDA, HAMBURGUESA DERECHA */
         #chat-header { 
             background: rgba(15, 20, 25, 0.4); 
-            backdrop-filter: blur(15px); 
-            -webkit-backdrop-filter: blur(15px); 
-            padding: 10px 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1); 
-            z-index: 10; 
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); 
+            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; 
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1); z-index: 10; box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
         }
         
         #header-logo { max-height: 40px; border-radius: 4px; }
 
-        /* BOTÓN HAMBURGUESA (Bandera Argentina) */
         #btn-toggle { 
             background: none; border: none; cursor: pointer; padding: 0; display: flex; 
             flex-direction: column; justify-content: space-between; width: 24px; height: 18px; margin-left: 15px;
@@ -70,22 +60,18 @@
         .linea-amarilla { width: 70%; background-color: var(--sol); margin: 0 auto; }
         #btn-toggle:hover span { transform: scale(1.05); filter: brightness(1.2); }
 
-        /* --- GLASSMORPHISM PANEL LATERAL (A LA DERECHA) --- */
         #sidebar { 
             width: 300px; min-width: 300px; 
             background: rgba(15, 20, 25, 0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-left: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; box-shadow: -5px 0 25px rgba(0,0,0,0.5); 
             display: flex; flex-direction: column; z-index: 2000; transition: 0.3s ease; box-sizing: border-box; 
-            height: 100vh; height: 100dvh; 
-            font-weight: 300;
+            height: 100vh; height: 100dvh; font-weight: 300;
         }
         #sidebar.collapsed { margin-right: -300px; } 
         
-        /* CABECERA DEL PANEL */
         .sidebar-header { position: relative; text-align: center; border-bottom: 1px solid rgba(253, 184, 19, 0.5); padding-bottom: 12px; margin-bottom: 12px; flex-shrink: 0; }
         .sidebar-header h2 { margin: 0; color: var(--celeste); font-size: 1.4rem; font-weight: 300; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
-        /* BOTÓN PARA CERRAR EL MENÚ EN EL CELU (X) */
         #btn-close-sidebar {
             position: absolute; left: 0; top: 2px; background: none; border: none; color: var(--celeste); 
             font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; display: none; font-weight: 300;
@@ -98,7 +84,6 @@
         .config-item { display: flex; flex-direction: column; gap: 4px; }
         .config-item label { font-weight: 300; font-size: 0.85rem; letter-spacing: 0.3px; color: #cfd8dc; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         
-        /* SELECTORES */
         .config-item select { 
             width: 100%; padding: 8px 6px; background: var(--azul-profundo); color: var(--blanco); border: 1px solid rgba(117, 170, 219, 0.4); border-radius: 6px; font-size: 0.85rem; font-weight: 300; outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); cursor: pointer;
         }
@@ -106,7 +91,6 @@
         .config-item select:focus { border-color: var(--celeste); box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 0 5px rgba(117,170,219,0.3); }
         .config-item select:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Sliders Finos */
         .config-item input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; padding: 8px 0; margin: 0; outline: none; }
         .config-item input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 2px; background: var(--linea-slider); border-radius: 2px; border: none; }
         .config-item input[type="range"]::-moz-range-track { width: 100%; height: 2px; background: var(--linea-slider); border-radius: 2px; border: none; }
@@ -133,7 +117,6 @@
         #chat-history::-webkit-scrollbar-thumb { background-color: rgba(117, 170, 219, 0.4); border-radius: 4px; }
         #chat-messages-wrapper { width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding: 0 20px; box-sizing: border-box; }
         
-        /* --- GLASSMORPHISM BURBUJAS --- */
         .mensaje { 
             max-width: 80%; padding: 12px 18px; border-radius: 16px; line-height: 1.5; font-size: 1.05rem; 
             font-weight: 300; word-wrap: break-word; position: relative; backdrop-filter: blur(16px); 
@@ -149,7 +132,6 @@
         .btn-responder { filter: none !important; opacity: 0.85; }
         .btn-responder:hover { opacity: 1; transform: scale(1.15); }
 
-        /* INPUT AREA */
         #input-area { 
             display: flex; flex-direction: column; background: rgba(15, 20, 25, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.2); 
             padding-bottom: env(safe-area-inset-bottom, 0);
@@ -177,7 +159,6 @@
         #btn-enviar svg { width: 18px; height: 18px; fill: #000; margin-left: 2px; }
         #btn-enviar:hover { background-color: var(--sol); transform: scale(1.05); }
         
-        /* ADAPTACIÓN MÓVIL SÚPER LIMPIA PARA EL MENÚ */
         @media (max-width: 768px) { 
             #sidebar { 
                 position: fixed; right: 0; top: 0; width: 85%; min-width: auto; max-width: 340px;
@@ -236,96 +217,9 @@
             <h2>Preferencias</h2>
         </div>
         <div id="preferences-section">
-            
-            <div class="config-item">
-                <label>📍 Provincia de la IA:</label>
-                <select id="provincia">
-                    <option value="---">---</option>
-                    <option value="Buenos_Aires">Buenos Aires</option>
-                    <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
-                    <option value="Catamarca">Catamarca</option>
-                    <option value="Chaco">Chaco</option>
-                    <option value="Chubut">Chubut</option>
-                    <option value="Cordoba">Córdoba</option>
-                    <option value="Corrientes">Corrientes</option>
-                    <option value="Entre_Rios">Entre Ríos</option>
-                    <option value="Formosa">Formosa</option>
-                    <option value="Jujuy">Jujuy</option>
-                    <option value="La_Pampa">La Pampa</option>
-                    <option value="La_Rioja">La Rioja</option>
-                    <option value="Mendoza">Mendoza</option>
-                    <option value="Misiones">Misiones</option>
-                    <option value="Neuquen">Neuquén</option>
-                    <option value="Rio_Negro">Río Negro</option>
-                    <option value="Salta">Salta</option>
-                    <option value="San_Juan">San Juan</option>
-                    <option value="San_Luis">San Luis</option>
-                    <option value="Santa_Cruz">Santa Cruz</option>
-                    <option value="Santa_Fe">Santa Fe</option>
-                    <option value="Santiago_del_Estero">Santiago del Estero</option>
-                    <option value="Tierra_del_Fuego">Tierra del Fuego, Malvinas, e Islas del Atlántico Sur</option>
-                    <option value="Tucuman">Tucumán</option>
-                </select>
-            </div>
-
-            <div class="config-item">
-                <label>🌎 Tu País (Usuario):</label>
-                <select id="pais-usuario">
-                    <option value="Argentina" selected>Argentina</option>
-                    <option value="Bolivia">Bolivia</option>
-                    <option value="Chile">Chile</option>
-                    <option value="Colombia">Colombia</option>
-                    <option value="Costa Rica">Costa Rica</option>
-                    <option value="Cuba">Cuba</option>
-                    <option value="Ecuador">Ecuador</option>
-                    <option value="El Salvador">El Salvador</option>
-                    <option value="España">España</option>
-                    <option value="Guatemala">Guatemala</option>
-                    <option value="Guinea Ecuatorial">Guinea Ecuatorial</option>
-                    <option value="Honduras">Honduras</option>
-                    <option value="México">México</option>
-                    <option value="Nicaragua">Nicaragua</option>
-                    <option value="Panamá">Panamá</option>
-                    <option value="Paraguay">Paraguay</option>
-                    <option value="Perú">Perú</option>
-                    <option value="Puerto Rico">Puerto Rico</option>
-                    <option value="República Dominicana">República Dominicana</option>
-                    <option value="Uruguay">Uruguay</option>
-                    <option value="Venezuela">Venezuela</option>
-                    <option value="Otro">Otro Hispano</option>
-                </select>
-            </div>
-            
-            <div class="config-item">
-                <label>🙋‍♂️ Tu Provincia (Si sos de Arg):</label>
-                <select id="provincia-usuario">
-                    <option value="---">---</option>
-                    <option value="Buenos_Aires">Buenos Aires</option>
-                    <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
-                    <option value="Catamarca">Catamarca</option>
-                    <option value="Chaco">Chaco</option>
-                    <option value="Chubut">Chubut</option>
-                    <option value="Cordoba">Córdoba</option>
-                    <option value="Corrientes">Corrientes</option>
-                    <option value="Entre_Rios">Entre Ríos</option>
-                    <option value="Formosa">Formosa</option>
-                    <option value="Jujuy">Jujuy</option>
-                    <option value="La_Pampa">La Pampa</option>
-                    <option value="La_Rioja">La Rioja</option>
-                    <option value="Mendoza">Mendoza</option>
-                    <option value="Misiones">Misiones</option>
-                    <option value="Neuquen">Neuquén</option>
-                    <option value="Rio_Negro">Río Negro</option>
-                    <option value="Salta">Salta</option>
-                    <option value="San_Juan">San Juan</option>
-                    <option value="San_Luis">San Luis</option>
-                    <option value="Santa_Cruz">Santa Cruz</option>
-                    <option value="Santa_Fe">Santa Fe</option>
-                    <option value="Santiago_del_Estero">Santiago del Estero</option>
-                    <option value="Tierra_del_Fuego">Tierra del Fuego, Malvinas, e Islas del Atlántico Sur</option>
-                    <option value="Tucuman">Tucumán</option>
-                </select>
-            </div>
+            <div class="config-item"><label>📍 Provincia de la IA:</label><select id="provincia"><option value="---">---</option><option value="Buenos_Aires">Buenos Aires</option><option value="CABA">Ciudad Autónoma de Buenos Aires</option><option value="Catamarca">Catamarca</option><option value="Chaco">Chaco</option><option value="Chubut">Chubut</option><option value="Cordoba">Córdoba</option><option value="Corrientes">Corrientes</option><option value="Entre_Rios">Entre Ríos</option><option value="Formosa">Formosa</option><option value="Jujuy">Jujuy</option><option value="La_Pampa">La Pampa</option><option value="La_Rioja">La Rioja</option><option value="Mendoza">Mendoza</option><option value="Misiones">Misiones</option><option value="Neuquen">Neuquén</option><option value="Rio_Negro">Río Negro</option><option value="Salta">Salta</option><option value="San_Juan">San Juan</option><option value="San_Luis">San Luis</option><option value="Santa_Cruz">Santa Cruz</option><option value="Santa_Fe">Santa Fe</option><option value="Santiago_del_Estero">Santiago del Estero</option><option value="Tierra_del_Fuego">Tierra del Fuego, Malvinas, e Islas del Atlántico Sur</option><option value="Tucuman">Tucumán</option></select></div>
+            <div class="config-item"><label>🌎 Tu País (Usuario):</label><select id="pais-usuario"><option value="Argentina" selected>Argentina</option><option value="Bolivia">Bolivia</option><option value="Chile">Chile</option><option value="Colombia">Colombia</option><option value="Costa Rica">Costa Rica</option><option value="Cuba">Cuba</option><option value="Ecuador">Ecuador</option><option value="El Salvador">El Salvador</option><option value="España">España</option><option value="Guatemala">Guatemala</option><option value="Guinea Ecuatorial">Guinea Ecuatorial</option><option value="Honduras">Honduras</option><option value="México">México</option><option value="Nicaragua">Nicaragua</option><option value="Panamá">Panamá</option><option value="Paraguay">Paraguay</option><option value="Perú">Perú</option><option value="Puerto Rico">Puerto Rico</option><option value="República Dominicana">República Dominicana</option><option value="Uruguay">Uruguay</option><option value="Venezuela">Venezuela</option><option value="Otro">Otro Hispano</option></select></div>
+            <div class="config-item"><label>🙋‍♂️ Tu Provincia (Si sos de Arg):</label><select id="provincia-usuario"><option value="---">---</option><option value="Buenos_Aires">Buenos Aires</option><option value="CABA">Ciudad Autónoma de Buenos Aires</option><option value="Catamarca">Catamarca</option><option value="Chaco">Chaco</option><option value="Chubut">Chubut</option><option value="Cordoba">Córdoba</option><option value="Corrientes">Corrientes</option><option value="Entre_Rios">Entre Ríos</option><option value="Formosa">Formosa</option><option value="Jujuy">Jujuy</option><option value="La_Pampa">La Pampa</option><option value="La_Rioja">La Rioja</option><option value="Mendoza">Mendoza</option><option value="Misiones">Misiones</option><option value="Neuquen">Neuquén</option><option value="Rio_Negro">Río Negro</option><option value="Salta">Salta</option><option value="San_Juan">San Juan</option><option value="San_Luis">San Luis</option><option value="Santa_Cruz">Santa Cruz</option><option value="Santa_Fe">Santa Fe</option><option value="Santiago_del_Estero">Santiago del Estero</option><option value="Tierra_del_Fuego">Tierra del Fuego, Malvinas, e Islas del Atlántico Sur</option><option value="Tucuman">Tucumán</option></select></div>
 
             <div class="config-item"><label>🤝 Confianza: <span id="val-confianza">8</span></label><input type="range" id="confianza" min="0" max="10" value="8" oninput="document.getElementById('val-confianza').innerText = this.value"></div>
             <div class="config-item"><label>❤️ Empatía: <span id="val-empatia">8</span></label><input type="range" id="empatia" min="0" max="10" value="8" oninput="document.getElementById('val-empatia').innerText = this.value"></div>
@@ -349,15 +243,13 @@
                 <li class="history-item active">Chat Actual</li>
             </ul>
         </div>
-
-        <!-- FIRMA DEL CREADOR OCULTA (EASTER EGG) -->
-        <!-- Proyecto: Che.GPT - Inteligencia Argentina -->
-        <!-- Diseñado y programado por: Licenciado Guido B. -->
-        <!-- Contacto Instagram: @guidobgl -->
-        <!-- La IA sabe quién es su creador gracias al System Prompt del backend. Preguntale :) -->
+        <!-- Proyecto: Che.GPT - Inteligencia Argentina. Diseñado y programado por: Licenciado Guido B. Instagram: @guidobgl -->
     </div>
 
     <script>
+        // VARIABLE NUEVA PARA GUARDAR LA MEMORIA DE LA CONVERSACIÓN
+        let historialChat = [];
+
         const btnToggle = document.getElementById('btn-toggle');
         const btnCloseSidebar = document.getElementById('btn-close-sidebar');
         const sidebar = document.getElementById('sidebar');
@@ -393,28 +285,17 @@
         }
         checkPais();
 
-        selectPaisUsuario.addEventListener('change', () => {
-            checkPais();
-            localStorage.setItem('pais_usuario', selectPaisUsuario.value);
-            localStorage.setItem('provincia_usuario', selectProvinciaUsuario.value);
-        });
+        selectPaisUsuario.addEventListener('change', () => { checkPais(); localStorage.setItem('pais_usuario', selectPaisUsuario.value); localStorage.setItem('provincia_usuario', selectProvinciaUsuario.value); });
         selectProvinciaUsuario.addEventListener('change', () => localStorage.setItem('provincia_usuario', selectProvinciaUsuario.value));
         selectProvinciaIA.addEventListener('change', () => localStorage.setItem('provincia_ia', selectProvinciaIA.value));
 
-
-        inputMensaje.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = (this.scrollHeight) + 'px';
-        });
+        inputMensaje.addEventListener('input', function() { this.style.height = 'auto'; this.style.height = (this.scrollHeight) + 'px'; });
 
         btnToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
         btnCloseSidebar.addEventListener('click', () => sidebar.classList.add('collapsed'));
         if (window.innerWidth > 768) sidebar.classList.remove('collapsed');
 
-        replyCloseBtn.addEventListener('click', () => {
-            replyContainer.classList.remove('active');
-            mensajeCitadoActual = null;
-        });
+        replyCloseBtn.addEventListener('click', () => { replyContainer.classList.remove('active'); mensajeCitadoActual = null; });
 
         btnFormal.addEventListener('click', () => {
             document.getElementById('confianza').value = 0; document.getElementById('val-confianza').innerText = '0';
@@ -426,32 +307,21 @@
 
         btnRandom.addEventListener('click', () => {
             selectProvinciaIA.selectedIndex = Math.floor(Math.random() * selectProvinciaIA.options.length);
-            
             selectPaisUsuario.selectedIndex = Math.floor(Math.random() * selectPaisUsuario.options.length);
             checkPais();
-            if (selectPaisUsuario.value === 'Argentina') {
-                selectProvinciaUsuario.selectedIndex = Math.floor(Math.random() * selectProvinciaUsuario.options.length);
-            }
+            if (selectPaisUsuario.value === 'Argentina') selectProvinciaUsuario.selectedIndex = Math.floor(Math.random() * selectProvinciaUsuario.options.length);
 
             const sliders010 = ['confianza', 'empatia', 'humor', 'tono', 'extension'];
-            sliders010.forEach(id => {
-                const val = Math.floor(Math.random() * 11);
-                document.getElementById(id).value = val;
-                document.getElementById('val-' + id).innerText = val;
-            });
-
-            const edadVal = Math.floor(Math.random() * (80 - 18 + 1)) + 18;
-            document.getElementById('edad').value = edadVal;
-            document.getElementById('val-edad').innerText = edadVal;
+            sliders010.forEach(id => { const val = Math.floor(Math.random() * 11); document.getElementById(id).value = val; document.getElementById('val-' + id).innerText = val; });
+            const edadVal = Math.floor(Math.random() * (80 - 18 + 1)) + 18; document.getElementById('edad').value = edadVal; document.getElementById('val-edad').innerText = edadVal;
         });
 
         btnNuevoChat.addEventListener('click', () => {
-            chatMessagesWrapper.innerHTML = `
-                <div class="mensaje mensaje-ia">
-                    <span>¡Chat reseteado! ¿De qué querés charlar ahora?</span>
-                </div>`;
+            chatMessagesWrapper.innerHTML = `<div class="mensaje mensaje-ia"><span>¡Chat reseteado! ¿De qué querés charlar ahora?</span></div>`;
             replyContainer.classList.remove('active');
             mensajeCitadoActual = null;
+            // Vaciamos la memoria del chat actual
+            historialChat = [];
         });
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -459,49 +329,25 @@
         let dictando = false;
         
         if (SpeechRecognition) {
-            reconocimiento = new SpeechRecognition();
-            reconocimiento.continuous = false;
-            reconocimiento.lang = 'es-AR';
-            
+            reconocimiento = new SpeechRecognition(); reconocimiento.continuous = false; reconocimiento.lang = 'es-AR';
             reconocimiento.onresult = (event) => {
                 const textoEscuchado = event.results[0][0].transcript;
                 inputMensaje.value += (inputMensaje.value ? ' ' : '') + textoEscuchado;
-                inputMensaje.style.height = 'auto';
-                inputMensaje.style.height = (inputMensaje.scrollHeight) + 'px';
+                inputMensaje.style.height = 'auto'; inputMensaje.style.height = (inputMensaje.scrollHeight) + 'px';
             };
-
-            reconocimiento.onend = () => {
-                dictando = false;
-                btnLive.innerText = "🎙️";
-                btnLive.classList.remove('btn-live-on');
-            };
-            
-            reconocimiento.onerror = () => {
-                dictando = false;
-                btnLive.innerText = "🎙️";
-                btnLive.classList.remove('btn-live-on');
-            };
+            reconocimiento.onend = () => { dictando = false; btnLive.innerText = "🎙️"; btnLive.classList.remove('btn-live-on'); };
+            reconocimiento.onerror = () => { dictando = false; btnLive.innerText = "🎙️"; btnLive.classList.remove('btn-live-on'); };
         }
 
         btnLive.addEventListener('click', () => {
             if (!SpeechRecognition) return alert("Tu navegador no soporta el dictado por voz.");
-            if (!dictando) {
-                reconocimiento.start();
-                dictando = true;
-                btnLive.innerText = "🔴";
-                btnLive.classList.add('btn-live-on');
-            } else {
-                reconocimiento.stop();
-                dictando = false;
-                btnLive.innerText = "🎙️";
-                btnLive.classList.remove('btn-live-on');
-            }
+            if (!dictando) { reconocimiento.start(); dictando = true; btnLive.innerText = "🔴"; btnLive.classList.add('btn-live-on'); } 
+            else { reconocimiento.stop(); dictando = false; btnLive.innerText = "🎙️"; btnLive.classList.remove('btn-live-on'); }
         });
 
         function agregarMensajeDirecto(texto, tipo) {
             const div = document.createElement('div');
             div.classList.add('mensaje', tipo);
-            
             const spanTexto = document.createElement('span');
             spanTexto.innerHTML = texto.replace(/\n/g, '<br>');
             div.appendChild(spanTexto);
@@ -511,36 +357,16 @@
                 accionesDiv.classList.add('mensaje-acciones');
                 
                 const btnCopiar = document.createElement('button');
-                btnCopiar.className = 'btn-accion-msj';
-                btnCopiar.title = 'Copiar mensaje';
-                btnCopiar.innerHTML = '📋';
-                btnCopiar.onclick = () => { 
-                    navigator.clipboard.writeText(texto); 
-                    btnCopiar.innerHTML = '✔️'; 
-                    setTimeout(() => btnCopiar.innerHTML = '📋', 2000); 
-                };
+                btnCopiar.className = 'btn-accion-msj'; btnCopiar.title = 'Copiar mensaje'; btnCopiar.innerHTML = '📋';
+                btnCopiar.onclick = () => { navigator.clipboard.writeText(texto); btnCopiar.innerHTML = '✔️'; setTimeout(() => btnCopiar.innerHTML = '📋', 2000); };
 
                 const btnResponder = document.createElement('button');
-                btnResponder.className = 'btn-accion-msj btn-responder';
-                btnResponder.title = 'Responder a este mensaje';
-                btnResponder.innerHTML = `
-                    <svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle;">
-                        <circle cx="12" cy="12" r="11" fill="var(--sol)" />
-                        <path d="M10.5 15.5L5.5 10.5l5-5v3.5c4 0 6.5 1.5 8 5.5-1.5-2.5-4-3-8-3v3.5z" fill="#121212" />
-                    </svg>
-                `;
-                btnResponder.onclick = () => {
-                    mensajeCitadoActual = texto;
-                    replyTextSpan.innerText = texto;
-                    replyContainer.classList.add('active');
-                    inputMensaje.focus();
-                };
+                btnResponder.className = 'btn-accion-msj btn-responder'; btnResponder.title = 'Responder a este mensaje';
+                btnResponder.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle;"><circle cx="12" cy="12" r="11" fill="var(--sol)" /><path d="M10.5 15.5L5.5 10.5l5-5v3.5c4 0 6.5 1.5 8 5.5-1.5-2.5-4-3-8-3v3.5z" fill="#121212" /></svg>`;
+                btnResponder.onclick = () => { mensajeCitadoActual = texto; replyTextSpan.innerText = texto; replyContainer.classList.add('active'); inputMensaje.focus(); };
 
-                accionesDiv.appendChild(btnCopiar);
-                accionesDiv.appendChild(btnResponder);
-                div.appendChild(accionesDiv);
+                accionesDiv.appendChild(btnCopiar); accionesDiv.appendChild(btnResponder); div.appendChild(accionesDiv);
             }
-
             chatMessagesWrapper.appendChild(div);
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
@@ -559,56 +385,40 @@
 
             agregarMensajeDirecto(htmlParaMostrarUsuario, 'mensaje-usuario');
             
-            inputMensaje.value = '';
-            inputMensaje.style.height = 'auto';
-            replyContainer.classList.remove('active');
-            mensajeCitadoActual = null;
+            // GUARDAMOS EL MENSAJE EN EL HISTORIAL PARA MANDARLO AL SERVER
+            historialChat.push({ role: 'user', parts: [{ text: textoFinalParaEnviar }] });
+            
+            inputMensaje.value = ''; inputMensaje.style.height = 'auto'; replyContainer.classList.remove('active'); mensajeCitadoActual = null;
 
             const perfilConfig = {
-                provincia: selectProvinciaIA.value,
-                paisUsuario: selectPaisUsuario.value,
-                provinciaUsuario: selectProvinciaUsuario.value,
-                confianza: parseInt(document.getElementById('confianza').value),
-                empatia: parseInt(document.getElementById('empatia').value),
-                humor: parseInt(document.getElementById('humor').value),
-                tono: parseInt(document.getElementById('tono').value),
-                edad: parseInt(document.getElementById('edad').value),
-                extension: parseInt(document.getElementById('extension').value)
+                provincia: selectProvinciaIA.value, paisUsuario: selectPaisUsuario.value, provinciaUsuario: selectProvinciaUsuario.value,
+                confianza: parseInt(document.getElementById('confianza').value), empatia: parseInt(document.getElementById('empatia').value),
+                humor: parseInt(document.getElementById('humor').value), tono: parseInt(document.getElementById('tono').value),
+                edad: parseInt(document.getElementById('edad').value), extension: parseInt(document.getElementById('extension').value)
             };
 
-            const cartelViejo = document.getElementById('cartel-escribiendo');
-            if (cartelViejo) cartelViejo.remove();
-
-            const divLoading = document.createElement('div');
-            divLoading.id = 'cartel-escribiendo';
-            divLoading.classList.add('mensaje', 'mensaje-ia');
-            divLoading.innerHTML = `<span>Escribiendo... ⏳</span>`;
-            chatMessagesWrapper.appendChild(divLoading);
-            chatHistory.scrollTop = chatHistory.scrollHeight;
+            const cartelViejo = document.getElementById('cartel-escribiendo'); if (cartelViejo) cartelViejo.remove();
+            const divLoading = document.createElement('div'); divLoading.id = 'cartel-escribiendo'; divLoading.classList.add('mensaje', 'mensaje-ia');
+            divLoading.innerHTML = `<span>Escribiendo... ⏳</span>`; chatMessagesWrapper.appendChild(divLoading); chatHistory.scrollTop = chatHistory.scrollHeight;
 
             try {
                 const req = await fetch('https://che-gpt.onrender.com/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ mensajeUsuario: textoFinalParaEnviar, perfil: perfilConfig })
+                    body: JSON.stringify({ historial: historialChat, perfil: perfilConfig })
                 });
                 const res = await req.json();
                 
-                const cartelParaBorrar = document.getElementById('cartel-escribiendo');
-                if (cartelParaBorrar) cartelParaBorrar.remove();
+                const cartelParaBorrar = document.getElementById('cartel-escribiendo'); if (cartelParaBorrar) cartelParaBorrar.remove();
                 
-                if (res.imagenGenerada) {
-                    const div = document.createElement('div');
-                    div.classList.add('mensaje', 'mensaje-ia');
-                    div.innerHTML = `<span>${res.respuesta}</span><br><img src="${res.imagenGenerada}" style="max-width:100%; border-radius:8px; margin-top:8px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">`;
-                    chatMessagesWrapper.appendChild(div);
-                } else {
+                if (res.respuesta) {
+                    // GUARDAMOS LA RESPUESTA DE LA IA EN EL HISTORIAL
+                    historialChat.push({ role: 'model', parts: [{ text: res.respuesta }] });
                     agregarMensajeDirecto(res.respuesta, 'mensaje-ia');
                 }
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             } catch (e) {
-                const cartelParaBorrar = document.getElementById('cartel-escribiendo');
-                if (cartelParaBorrar) cartelParaBorrar.remove();
+                const cartelParaBorrar = document.getElementById('cartel-escribiendo'); if (cartelParaBorrar) cartelParaBorrar.remove();
                 agregarMensajeDirecto("Error del servidor.", 'mensaje-error');
             }
         });
