@@ -187,9 +187,7 @@
         </div>
         <div id="chat-history">
             <div id="chat-messages-wrapper">
-                <div class="mensaje mensaje-ia">
-                    <span>¡Qué hacés, compa! Podés escribirme por acá abajo o usar el microfonito para dictarme tu mensaje. ¿De qué querés charlar hoy?</span>
-                </div>
+                <!-- Se llenará automáticamente por JS con el saludo inicial o el historial -->
             </div>
         </div>
         <div id="input-area">
@@ -247,9 +245,6 @@
     </div>
 
     <script>
-        // VARIABLE NUEVA PARA GUARDAR LA MEMORIA DE LA CONVERSACIÓN
-        let historialChat = [];
-
         const btnToggle = document.getElementById('btn-toggle');
         const btnCloseSidebar = document.getElementById('btn-close-sidebar');
         const sidebar = document.getElementById('sidebar');
@@ -271,6 +266,44 @@
         const replyCloseBtn = document.getElementById('reply-preview-close');
         let mensajeCitadoActual = null;
 
+        // --- MANEJO DE MEMORIA LOCAL (HISTORIAL) Y SALUDO INICIAL ---
+        const saludoInicialHTML = `
+            ¡Hola! Soy <b>Che.GPT</b>, tu asistente de Inteligencia Artificial.<br><br>
+            Desde el menú de <b>Preferencias</b> (arriba a la derecha) podés configurar mi forma de ser a tu gusto:<br>
+            📍 <b>Provincia:</b> Elegí mis modismos y acento.<br>
+            🤝 <b>Confianza y Empatía:</b> Ajustá si preferís un trato formal o de amigos.<br>
+            🎭 <b>Humor y Vocabulario:</b> Llevame desde un tono súper profesional hasta puro sarcasmo y lunfardo.<br><br>
+            ¡Escribime o usá el micrófono para empezar!
+        `;
+
+        let historialChat = JSON.parse(localStorage.getItem('chegpt_historial')) || [];
+
+        function renderizarPantallaInicial() {
+            chatMessagesWrapper.innerHTML = '';
+            if (historialChat.length === 0) {
+                const div = document.createElement('div');
+                div.classList.add('mensaje', 'mensaje-ia');
+                div.innerHTML = `<span>${saludoInicialHTML}</span>`;
+                chatMessagesWrapper.appendChild(div);
+            } else {
+                historialChat.forEach(msg => {
+                    const tipo = msg.role === 'user' ? 'mensaje-usuario' : 'mensaje-ia';
+                    let textoParaMostrar = msg.parts[0].text;
+                    
+                    // Si el mensaje del usuario tiene una cita, la reconstruimos visualmente
+                    if (textoParaMostrar.startsWith('[En respuesta a:')) {
+                        textoParaMostrar = textoParaMostrar.replace(/\[En respuesta a: "(.*?)"\]\n/, '<div style="font-size: 0.85rem; border-left: 2px solid rgba(255,255,255,0.4); padding-left: 8px; margin-bottom: 5px; opacity: 0.9; background: rgba(0,0,0,0.15); border-radius: 4px; padding: 4px; text-shadow: none;">Citado: "$1"</div>');
+                    }
+                    agregarMensajeDirecto(textoParaMostrar, tipo, true);
+                });
+            }
+        }
+        
+        // Llamamos a la función apenas carga la página
+        renderizarPantallaInicial();
+
+
+        // --- MANEJO DE PREFERENCIAS ---
         if (localStorage.getItem('pais_usuario')) selectPaisUsuario.value = localStorage.getItem('pais_usuario');
         if (localStorage.getItem('provincia_usuario')) selectProvinciaUsuario.value = localStorage.getItem('provincia_usuario');
         if (localStorage.getItem('provincia_ia')) selectProvinciaIA.value = localStorage.getItem('provincia_ia');
@@ -316,14 +349,16 @@
             const edadVal = Math.floor(Math.random() * (80 - 18 + 1)) + 18; document.getElementById('edad').value = edadVal; document.getElementById('val-edad').innerText = edadVal;
         });
 
+        // BOTÓN + NUEVO: Limpia la memoria local y reinicia la charla
         btnNuevoChat.addEventListener('click', () => {
-            chatMessagesWrapper.innerHTML = `<div class="mensaje mensaje-ia"><span>¡Chat reseteado! ¿De qué querés charlar ahora?</span></div>`;
+            historialChat = [];
+            localStorage.removeItem('chegpt_historial');
+            renderizarPantallaInicial();
             replyContainer.classList.remove('active');
             mensajeCitadoActual = null;
-            // Vaciamos la memoria del chat actual
-            historialChat = [];
         });
 
+        // --- SISTEMA DE VOZ ---
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         let reconocimiento = null;
         let dictando = false;
@@ -345,7 +380,7 @@
             else { reconocimiento.stop(); dictando = false; btnLive.innerText = "🎙️"; btnLive.classList.remove('btn-live-on'); }
         });
 
-        function agregarMensajeDirecto(texto, tipo) {
+        function agregarMensajeDirecto(texto, tipo, esRestauracion = false) {
             const div = document.createElement('div');
             div.classList.add('mensaje', tipo);
             const spanTexto = document.createElement('span');
@@ -358,15 +393,33 @@
                 
                 const btnCopiar = document.createElement('button');
                 btnCopiar.className = 'btn-accion-msj'; btnCopiar.title = 'Copiar mensaje'; btnCopiar.innerHTML = '📋';
-                btnCopiar.onclick = () => { navigator.clipboard.writeText(texto); btnCopiar.innerHTML = '✔️'; setTimeout(() => btnCopiar.innerHTML = '📋', 2000); };
+                btnCopiar.onclick = () => { 
+                    // Limpiamos los saltos de línea HTML si vamos a copiar
+                    const textoPuro = texto.replace(/<br>/g, '\n').replace(/<[^>]*>?/gm, '');
+                    navigator.clipboard.writeText(textoPuro); 
+                    btnCopiar.innerHTML = '✔️'; 
+                    setTimeout(() => btnCopiar.innerHTML = '📋', 2000); 
+                };
 
                 const btnResponder = document.createElement('button');
                 btnResponder.className = 'btn-accion-msj btn-responder'; btnResponder.title = 'Responder a este mensaje';
                 btnResponder.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle;"><circle cx="12" cy="12" r="11" fill="var(--sol)" /><path d="M10.5 15.5L5.5 10.5l5-5v3.5c4 0 6.5 1.5 8 5.5-1.5-2.5-4-3-8-3v3.5z" fill="#121212" /></svg>`;
-                btnResponder.onclick = () => { mensajeCitadoActual = texto; replyTextSpan.innerText = texto; replyContainer.classList.add('active'); inputMensaje.focus(); };
+                btnResponder.onclick = () => { 
+                    const textoLimpio = texto.replace(/<br>/g, '\n').replace(/<[^>]*>?/gm, '');
+                    mensajeCitadoActual = textoLimpio; 
+                    replyTextSpan.innerText = textoLimpio; 
+                    replyContainer.classList.add('active'); 
+                    inputMensaje.focus(); 
+                };
 
                 accionesDiv.appendChild(btnCopiar); accionesDiv.appendChild(btnResponder); div.appendChild(accionesDiv);
             }
+
+            // Si es el primer mensaje de usuario y estaba el saludo, limpiamos la caja
+            if (!esRestauracion && tipo === 'mensaje-usuario' && chatMessagesWrapper.innerHTML.includes(saludoInicialHTML)) {
+                chatMessagesWrapper.innerHTML = '';
+            }
+
             chatMessagesWrapper.appendChild(div);
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
@@ -385,8 +438,9 @@
 
             agregarMensajeDirecto(htmlParaMostrarUsuario, 'mensaje-usuario');
             
-            // GUARDAMOS EL MENSAJE EN EL HISTORIAL PARA MANDARLO AL SERVER
+            // GUARDAMOS EL MENSAJE EN EL HISTORIAL Y EN LOCALSTORAGE
             historialChat.push({ role: 'user', parts: [{ text: textoFinalParaEnviar }] });
+            localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
             
             inputMensaje.value = ''; inputMensaje.style.height = 'auto'; replyContainer.classList.remove('active'); mensajeCitadoActual = null;
 
@@ -397,7 +451,6 @@
                 edad: parseInt(document.getElementById('edad').value), extension: parseInt(document.getElementById('extension').value)
             };
 
-            const cartelViejo = document.getElementById('cartel-escribiendo'); if (cartelViejo) cartelViejo.remove();
             const divLoading = document.createElement('div'); divLoading.id = 'cartel-escribiendo'; divLoading.classList.add('mensaje', 'mensaje-ia');
             divLoading.innerHTML = `<span>Escribiendo... ⏳</span>`; chatMessagesWrapper.appendChild(divLoading); chatHistory.scrollTop = chatHistory.scrollHeight;
 
@@ -412,14 +465,20 @@
                 const cartelParaBorrar = document.getElementById('cartel-escribiendo'); if (cartelParaBorrar) cartelParaBorrar.remove();
                 
                 if (res.respuesta) {
-                    // GUARDAMOS LA RESPUESTA DE LA IA EN EL HISTORIAL
+                    // GUARDAMOS LA RESPUESTA DE LA IA
                     historialChat.push({ role: 'model', parts: [{ text: res.respuesta }] });
+                    localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
+                    
                     agregarMensajeDirecto(res.respuesta, 'mensaje-ia');
                 }
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             } catch (e) {
                 const cartelParaBorrar = document.getElementById('cartel-escribiendo'); if (cartelParaBorrar) cartelParaBorrar.remove();
                 agregarMensajeDirecto("Error del servidor.", 'mensaje-error');
+                
+                // Si hubo error, revertimos el último mensaje del historial para no trabar a la IA
+                historialChat.pop();
+                localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
             }
         });
 
