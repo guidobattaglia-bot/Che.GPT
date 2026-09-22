@@ -425,8 +425,8 @@
 
             agregarMensajeDirecto(htmlParaMostrarUsuario, 'mensaje-usuario');
             
+            // Agregamos al historial local
             historialChat.push({ role: 'user', parts: [{ text: textoFinalParaEnviar }] });
-            localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
             
             inputMensaje.value = ''; inputMensaje.style.height = 'auto'; replyContainer.classList.remove('active'); mensajeCitadoActual = null;
 
@@ -440,7 +440,6 @@
             const cartelViejo = document.getElementById('cartel-escribiendo');
             if (cartelViejo) cartelViejo.remove();
 
-            // NUEVO CARTEL: "Procesando chamuyo... 🧉"
             const divLoading = document.createElement('div'); 
             divLoading.id = 'cartel-escribiendo'; 
             divLoading.classList.add('mensaje', 'mensaje-ia');
@@ -455,29 +454,27 @@
                     body: JSON.stringify({ historial: historialChat, perfil: perfilConfig })
                 });
 
-                if (!req.ok) {
-                    throw new Error(`Error en el servidor: ${req.status}`);
-                }
-
                 const res = await req.json();
                 
                 const cartelParaBorrar = document.getElementById('cartel-escribiendo'); 
                 if (cartelParaBorrar) cartelParaBorrar.remove();
                 
-                if (res && res.respuesta && res.respuesta.trim() !== "") {
+                if (req.ok && res && res.respuesta && res.respuesta.trim() !== "") {
                     historialChat.push({ role: 'model', parts: [{ text: res.respuesta }] });
                     localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
                     agregarMensajeDirecto(res.respuesta, 'mensaje-ia');
                 } else {
-                    throw new Error("Respuesta vacía recibida");
+                    const motivo = res && res.error ? res.error : `Error HTTP ${req.status}`;
+                    throw new Error(motivo);
                 }
                 chatHistory.scrollTop = chatHistory.scrollHeight;
             } catch (e) {
                 const cartelParaBorrar = document.getElementById('cartel-escribiendo'); 
                 if (cartelParaBorrar) cartelParaBorrar.remove();
                 
-                agregarMensajeDirecto("Se me trabó la neurona con esa consulta. Tirame de nuevo o fijate si se cortó la señal.", 'mensaje-error');
+                agregarMensajeDirecto(`Se me trabó la neurona (${e.message}). Probá de nuevo o tocá "+ Nuevo" en Preferencias.`, 'mensaje-error');
                 
+                // Quitamos la pregunta fallida para que no contamine el historial
                 historialChat.pop();
                 localStorage.setItem('chegpt_historial', JSON.stringify(historialChat));
             }
