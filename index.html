@@ -16,7 +16,7 @@
             --texto: #E0E0E0;
         }
         
-        /* FONDO GLOBAL FIJO Y ABSOLUTO */
+        /* FONDO GLOBAL Y AJUSTE DE PANTALLA DINÁMICO (FIX MÓVIL) */
         body { 
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
             background-color: var(--fondo); 
@@ -28,7 +28,8 @@
             color: var(--texto); 
             margin: 0; 
             display: flex; 
-            height: 100vh; 
+            height: 100vh; /* Fallback navegadores viejos */
+            height: 100dvh; /* Se adapta a la barra del celular */
             overflow: hidden; 
         }
 
@@ -53,52 +54,35 @@
 
         /* BOTÓN HAMBURGUESA (Bandera Argentina) */
         #btn-toggle { 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            padding: 0; 
-            display: flex; 
-            flex-direction: column; 
-            justify-content: space-between; 
-            width: 24px; 
-            height: 18px; 
-            margin-left: 15px;
+            background: none; border: none; cursor: pointer; padding: 0; display: flex; 
+            flex-direction: column; justify-content: space-between; width: 24px; height: 18px; margin-left: 15px;
         }
-        #btn-toggle span {
-            display: block;
-            height: 3px;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.5);
-        }
+        #btn-toggle span { display: block; height: 3px; border-radius: 2px; transition: all 0.3s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         .linea-celeste { width: 100%; background-color: var(--celeste); }
         .linea-amarilla { width: 70%; background-color: var(--sol); margin: 0 auto; }
-        
         #btn-toggle:hover span { transform: scale(1.05); filter: brightness(1.2); }
 
         /* --- GLASSMORPHISM PANEL LATERAL (A LA DERECHA) --- */
         #sidebar { 
-            width: 300px; 
-            min-width: 300px; 
-            background: rgba(15, 20, 25, 0.25);
-            backdrop-filter: blur(20px); 
-            -webkit-backdrop-filter: blur(20px);
-            border-left: 1px solid rgba(255, 255, 255, 0.1); 
-            padding: 20px; 
-            box-shadow: -5px 0 25px rgba(0,0,0,0.5); 
-            display: flex; 
-            flex-direction: column; 
-            z-index: 2000; 
-            transition: 0.3s ease; 
-            box-sizing: border-box; 
-            height: 100vh; 
+            width: 300px; min-width: 300px; 
+            background: rgba(15, 20, 25, 0.25); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1); padding: 20px; box-shadow: -5px 0 25px rgba(0,0,0,0.5); 
+            display: flex; flex-direction: column; z-index: 2000; transition: 0.3s ease; box-sizing: border-box; 
+            height: 100vh; height: 100dvh; /* FIX MÓVIL */
             font-weight: 300;
         }
         #sidebar.collapsed { margin-right: -300px; } 
         
-        .sidebar-header { text-align: center; border-bottom: 1px solid rgba(253, 184, 19, 0.5); padding-bottom: 12px; margin-bottom: 12px; flex-shrink: 0; }
+        /* CABECERA DEL PANEL (CON RELATIVE PARA UBICAR LA CRUZ) */
+        .sidebar-header { position: relative; text-align: center; border-bottom: 1px solid rgba(253, 184, 19, 0.5); padding-bottom: 12px; margin-bottom: 12px; flex-shrink: 0; }
         .sidebar-header h2 { margin: 0; color: var(--celeste); font-size: 1.4rem; font-weight: 300; letter-spacing: 1px; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
         
+        /* BOTÓN PARA CERRAR EL MENÚ EN EL CELU (X) */
+        #btn-close-sidebar {
+            position: absolute; left: 0; top: 2px; background: none; border: none; color: var(--celeste); 
+            font-size: 1.5rem; cursor: pointer; padding: 0; line-height: 1; display: none; font-weight: 300;
+        }
+
         #preferences-section { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 5px; margin-bottom: 10px; }
         #preferences-section::-webkit-scrollbar { width: 4px; }
         #preferences-section::-webkit-scrollbar-thumb { background-color: rgba(117, 170, 219, 0.4); border-radius: 4px; }
@@ -108,37 +92,18 @@
         
         /* SELECTORES */
         .config-item select { 
-            width: 100%; 
-            padding: 8px 6px; 
-            background: var(--azul-profundo); 
-            color: var(--blanco); 
-            border: 1px solid rgba(117, 170, 219, 0.4); 
-            border-radius: 6px; 
-            font-size: 0.85rem; 
-            font-weight: 300;
-            outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
-            cursor: pointer;
+            width: 100%; padding: 8px 6px; background: var(--azul-profundo); color: var(--blanco); border: 1px solid rgba(117, 170, 219, 0.4); border-radius: 6px; font-size: 0.85rem; font-weight: 300; outline: none; transition: border-color 0.2s, box-shadow 0.2s; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); cursor: pointer;
         }
         .config-item select option { background: var(--azul-profundo); color: var(--blanco); }
         .config-item select:focus { border-color: var(--celeste); box-shadow: inset 0 2px 4px rgba(0,0,0,0.4), 0 0 5px rgba(117,170,219,0.3); }
         .config-item select:disabled { opacity: 0.5; cursor: not-allowed; }
 
         /* Sliders Finos */
-        .config-item input[type="range"] {
-            -webkit-appearance: none; width: 100%; background: transparent; padding: 8px 0; margin: 0; outline: none;
-        }
+        .config-item input[type="range"] { -webkit-appearance: none; width: 100%; background: transparent; padding: 8px 0; margin: 0; outline: none; }
         .config-item input[type="range"]::-webkit-slider-runnable-track { width: 100%; height: 2px; background: var(--linea-slider); border-radius: 2px; border: none; }
         .config-item input[type="range"]::-moz-range-track { width: 100%; height: 2px; background: var(--linea-slider); border-radius: 2px; border: none; }
-        .config-item input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
-            background: var(--azul-oscuro); margin-top: -5px; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.6); transition: background 0.2s;
-        }
-        .config-item input[type="range"]::-moz-range-thumb {
-            height: 12px; width: 12px; border-radius: 50%; background: var(--azul-oscuro); border: none;
-            cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.6); transition: background 0.2s;
-        }
+        .config-item input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: var(--azul-oscuro); margin-top: -5px; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.6); transition: background 0.2s; }
+        .config-item input[type="range"]::-moz-range-thumb { height: 12px; width: 12px; border-radius: 50%; background: var(--azul-oscuro); border: none; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.6); transition: background 0.2s; }
         .config-item input[type="range"]::-webkit-slider-thumb:hover { background: var(--celeste); }
         .config-item input[type="range"]::-moz-range-thumb:hover { background: var(--celeste); }
         
@@ -171,14 +136,16 @@
         .mensaje-error { align-self: center; background-color: rgba(90, 26, 26, 0.6); color: #ffb3b3; border: 1px solid rgba(255, 0, 0, 0.4); text-align: center; border-radius: 12px; backdrop-filter: blur(10px); }
         
         .mensaje-acciones { display: flex; gap: 10px; margin-top: 10px; justify-content: flex-end; border-top: 1px solid rgba(255, 255, 255, 0.15); padding-top: 8px; }
-        
         .btn-accion-msj { background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.6; transition: 0.2s; padding: 0; filter: grayscale(100%); display: flex; align-items: center; justify-content: center; }
         .btn-accion-msj:hover { opacity: 1; transform: scale(1.15); filter: grayscale(0%); }
         .btn-responder { filter: none !important; opacity: 0.85; }
         .btn-responder:hover { opacity: 1; transform: scale(1.15); }
 
         /* INPUT AREA */
-        #input-area { display: flex; flex-direction: column; background: rgba(15, 20, 25, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.2); }
+        #input-area { 
+            display: flex; flex-direction: column; background: rgba(15, 20, 25, 0.4); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 10; box-shadow: 0 -4px 15px rgba(0,0,0,0.2); 
+            padding-bottom: env(safe-area-inset-bottom, 0); /* FIX MÓVIL: Evita la barra de inicio de los iPhones */
+        }
         
         #reply-preview-container { display: none; background: rgba(0,0,0,0.4); backdrop-filter: blur(10px); padding: 8px 15px; margin: 10px 20px 0 20px; border-left: 4px solid var(--celeste); border-radius: 6px; max-width: 900px; align-self: center; width: calc(100% - 40px); box-sizing: border-box; position: relative; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border: 1px solid rgba(255, 255, 255, 0.05); }
         #reply-preview-container.active { display: flex; flex-direction: column; gap: 2px; }
@@ -210,6 +177,9 @@
                 transform: translateX(0); margin-right: 0; 
             } 
             #sidebar.collapsed { transform: translateX(100%); }
+            
+            /* Mostramos la crucecita solo en celulares */
+            #btn-close-sidebar { display: block; }
         }
     </style>
 </head>
@@ -250,7 +220,10 @@
     </div>
 
     <div id="sidebar" class="collapsed">
-        <div class="sidebar-header"><h2>Preferencias</h2></div>
+        <div class="sidebar-header">
+            <button id="btn-close-sidebar" title="Cerrar menú">✕</button>
+            <h2>Preferencias</h2>
+        </div>
         <div id="preferences-section">
             
             <div class="config-item">
@@ -366,7 +339,7 @@
             </ul>
         </div>
 
-        <!-- FIRMA DEL CREADOR (NUEVO) -->
+        <!-- FIRMA DEL CREADOR -->
         <div style="margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); text-align: center;">
             <a href="https://instagram.com/guidobgl" target="_blank" style="color: #cfd8dc; text-decoration: none; font-size: 0.75rem; transition: 0.2s; display: block;">
                 Diseñado y programado por <br>
@@ -378,6 +351,7 @@
 
     <script>
         const btnToggle = document.getElementById('btn-toggle');
+        const btnCloseSidebar = document.getElementById('btn-close-sidebar');
         const sidebar = document.getElementById('sidebar');
         const chatMessagesWrapper = document.getElementById('chat-messages-wrapper');
         const chatHistory = document.getElementById('chat-history');
@@ -425,7 +399,13 @@
             this.style.height = (this.scrollHeight) + 'px';
         });
 
+        // Alternar el menú lateral desde la hamburguesa
         btnToggle.addEventListener('click', () => sidebar.classList.toggle('collapsed'));
+        
+        // Cerrar el menú lateral con la cruz en móviles
+        btnCloseSidebar.addEventListener('click', () => sidebar.classList.add('collapsed'));
+
+        // En escritorio que empiece abierto
         if (window.innerWidth > 768) sidebar.classList.remove('collapsed');
 
         replyCloseBtn.addEventListener('click', () => {
@@ -604,7 +584,7 @@
             chatHistory.scrollTop = chatHistory.scrollHeight;
 
             try {
-                const req = await fetch('http://localhost:3000/chat', {
+                const req = await fetch('https://che-gpt.onrender.com/chat', { /* Asegurá apuntar siempre al live */
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ mensajeUsuario: textoFinalParaEnviar, perfil: perfilConfig })
@@ -626,7 +606,7 @@
             } catch (e) {
                 const cartelParaBorrar = document.getElementById('cartel-escribiendo');
                 if (cartelParaBorrar) cartelParaBorrar.remove();
-                agregarMensajeDirecto("Error del servidor HTTP.", 'mensaje-error');
+                agregarMensajeDirecto("Error del servidor.", 'mensaje-error');
             }
         });
 
